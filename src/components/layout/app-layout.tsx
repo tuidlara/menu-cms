@@ -1,4 +1,4 @@
-import { ClipboardList, LayoutGrid, MapPin, Tags, UtensilsCrossed } from "lucide-react"
+import { ClipboardList, Columns3, LayoutGrid, MapPin, Tags, UtensilsCrossed } from "lucide-react"
 import { NavLink, Outlet } from "react-router-dom"
 import { cn } from "@/lib/utils"
 
@@ -7,6 +7,7 @@ const navigation = [
   { to: "/products", label: "Produtos", icon: LayoutGrid },
   { to: "/spots", label: "Mesas", icon: MapPin },
   { to: "/guest-checks", label: "Comandas", icon: ClipboardList },
+  { to: "/orders/kanban", label: "Kanban", icon: Columns3 },
 ]
 
 export function AppLayout() {
@@ -25,7 +26,7 @@ export function AppLayout() {
             <p className="text-sm text-muted-foreground">Painel administrativo</p>
           </div>
         </div>
-        <nav aria-label="Navegação principal" className="grid grid-cols-2 gap-2 px-4 pb-4 sm:grid-cols-4 md:grid-cols-1">
+        <nav aria-label="Navegação principal" className="grid grid-cols-2 gap-2 px-4 pb-4 sm:grid-cols-5 md:grid-cols-1">
           {navigation.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
