@@ -1,18 +1,25 @@
 import { Link, useParams } from "react-router-dom"
+import { useQueryClient } from "@tanstack/react-query"
+import { GuestCheckOrders } from "@/cases/orders/components/guest-check-orders"
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react"
 import { useGuestCheck } from "@/cases/guest-checks/hooks/use-guest-checks"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { getApiErrorMessage } from "@/lib/api-error"
 import { formatCurrency, formatDateTime } from "@/lib/format"
 
 export function GuestCheckDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const queryClient = useQueryClient()
   const { data: guestCheck, isPending, isError, isFetching, error, refetch } = useGuestCheck(id ?? "")
+
+  function handleRefresh() {
+    void refetch()
+    void queryClient.invalidateQueries({ queryKey: ["orders", id] })
+  }
 
   return (
     <section className="space-y-6">
@@ -25,7 +32,7 @@ export function GuestCheckDetailPage() {
           <Button variant="outline" nativeButton={false} render={<Link to="/guest-checks" />}>
             Voltar às comandas
           </Button>
-          <Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>
+          <Button variant="outline" disabled={isFetching} onClick={handleRefresh}>
             <RefreshCw className={isFetching ? "animate-spin" : ""} aria-hidden="true" />
             {isFetching ? "Atualizando..." : "Atualizar"}
           </Button>
@@ -39,7 +46,7 @@ export function GuestCheckDetailPage() {
           <AlertDescription className="space-y-3">
             <p>{getApiErrorMessage(error, "Ocorreu um erro ao buscar os detalhes da comanda. Tente novamente.")}</p>
             {guestCheck && <p>Os dados exibidos abaixo podem estar desatualizados.</p>}
-            <Button variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()}>
+            <Button variant="outline" size="sm" disabled={isFetching} onClick={handleRefresh}>
               Tentar novamente
             </Button>
           </AlertDescription>
@@ -100,38 +107,7 @@ export function GuestCheckDetailPage() {
             </Card>
           </div>
 
-          <Card className="gap-0 overflow-hidden pb-0">
-            <CardHeader className="pb-6">
-              <CardTitle>Pedidos da comanda</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                {guestCheck.orders.length} {guestCheck.orders.length === 1 ? "pedido recebido" : "pedidos recebidos"}
-              </p>
-            </CardHeader>
-            {guestCheck.orders.length === 0 ? (
-              <CardContent className="border-t py-8 text-center text-muted-foreground">
-                Nenhum pedido nesta comanda.
-              </CardContent>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="pl-6">Pedido</TableHead>
-                    <TableHead>Recebido em</TableHead>
-                    <TableHead className="pr-6 text-right">Total do pedido</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {guestCheck.orders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="pl-6 font-medium"><span title={order.id}>#{order.id.slice(0, 8)}</span></TableCell>
-                      <TableCell>{formatDateTime(order.createdAt)}</TableCell>
-                      <TableCell className="pr-6 text-right tabular-nums">{formatCurrency(order.total)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </Card>
+          <GuestCheckOrders guestCheckId={guestCheck.id} />
         </>
       )}
     </section>
