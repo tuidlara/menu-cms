@@ -4,9 +4,9 @@ Painel administrativo do cardápio digital e da operação de um restaurante, in
 
 ## Etapa atual
 
-Segunda etapa: CRUD de categorias integrado à API, com nome, ícone, ordem de exibição e situação. Inclui validação, confirmação de exclusão, mensagens de sucesso e erro, carregamento e lista vazia. Os demais módulos ainda estão em desenvolvimento; não apresentam dados simulados.
+Terceira etapa: CRUDs de categorias e produtos integrados à API. Produtos incluem imagem, descrição, categoria, preço, situação, vegetariano e novidade, além de filtro por categoria. As duas áreas possuem validação, confirmação de exclusão, mensagens de sucesso e erro, carregamento e lista vazia. Mesas, comandas e pedidos ainda estão em desenvolvimento.
 
-Os CRUDs de produtos e mesas, a leitura de comandas, os pedidos e o Kanban serão implementados nas etapas seguintes. Esta versão ainda não é a entrega completa.
+O CRUD de mesas, a leitura de comandas, os pedidos e o Kanban serão implementados nas etapas seguintes. Esta versão ainda não é a entrega completa.
 
 ## Instalação e execução
 
@@ -35,7 +35,7 @@ O backend deve permitir CORS para o frontend. Antes dos módulos de dados, valid
 - `src/components/ui`: componentes locais do shadcn/ui.
 - `src/lib/axios.ts`: única instância Axios, com baseURL obtida de `VITE_API_URL`.
 - `src/lib/utils.ts`: utilitário de classes.
-- `src/cases/categories`: DTOs, services, hooks e componentes do CRUD de categorias; os demais domínios seguirão o mesmo padrão do menu-frontend de aula.
+- `src/cases/categories` e `src/cases/products`: DTOs, services, hooks e componentes de cada módulo, seguindo o mesmo padrão do menu-frontend de aula.
 
 As leituras usam `useQuery`; as gravações usam `useMutation`, com `invalidateQueries` após o sucesso. Edição e exclusão de categorias também invalidam produtos, pois os produtos carregam a categoria relacionada.
 
@@ -80,7 +80,7 @@ A última tentativa de conexão ao banco retornou `tenant/user not found`. A val
 5. Comandas e pedidos com alteração de status.
 6. Kanban, revisão e documentação da entrega.
 
-Cada etapa é implementada e verificada separadamente. Os commits e pushes são feitos manualmente pelo aluno; o CRUD de categorias corresponde ao segundo commit do CMS. O vídeo explicativo deverá ser gravado pelo aluno, demonstrando e explicando a versão final.
+Cada etapa é implementada e verificada separadamente. Os commits e pushes são feitos manualmente pelo aluno; categorias correspondem ao segundo commit e produtos ao terceiro commit do CMS. O vídeo explicativo deverá ser gravado pelo aluno, demonstrando e explicando a versão final.
 
 ## Validação da etapa de categorias
 
@@ -98,3 +98,26 @@ Depois, teste no CMS: cadastrar uma categoria inativa, editar nome/ícone/ordem/
 Os testes automatizados do backend usam repositório isolado; não alteram registros do banco. Eles não substituem a validação da API real no Insomnia.
 
 Validação local desta etapa: builds do CMS e backend aprovados; lint do CMS e do módulo de categorias aprovado. Os testes isolados não dependem do banco. Na última tentativa de execução real do backend, a conexão retornou `tenant/user not found`; revisar `DATABASE_URL` no `.env` local antes de validar a persistência real e as rotas no Insomnia. Nenhuma credencial deve ser adicionada ao Git.
+
+## Produtos: terceira etapa
+
+A listagem administrativa inclui produtos ativos e inativos, imagem, nome, categoria, preço formatado em reais, vegetariano, novidade e situação. O filtro por categoria fica na URL e cada filtro possui sua própria chave de cache no TanStack Query.
+
+O formulário permite cadastrar e editar nome, descrição, preço, imagem, categoria, situação e os dois indicadores. O ID é gerado pela API. O preço aceita vírgula ou ponto decimal, deve ser maior que zero e ter no máximo duas casas decimais; valores inválidos não são arredondados silenciosamente nem enviados à API. Nome vazio e URL de imagem inválida também são tratados antes do envio.
+
+As opções do select de categoria vêm de `GET /categories`. Um produto pode ficar sem categoria porque esse relacionamento é opcional no backend. Novos vínculos exigem uma categoria ativa. Na edição, uma categoria já atribuída que foi inativada pode ser mantida: o formulário omite `categoryId` quando esse vínculo não mudou, respeitando a regra da API.
+
+Criação, edição e exclusão usam `useMutation` e invalidam todas as listagens de produtos. Edição e exclusão também invalidam pedidos e comandas, que podem exibir dados relacionados ao produto. Os valores históricos dos itens de pedidos não são alterados pelo CMS.
+
+Select e Textarea são componentes do shadcn/ui adicionados nesta etapa. Nenhuma dependência adicional foi necessária.
+
+Com o backend atualizado em execução, valide no Insomnia:
+
+- `GET /products` e `GET /products?categoryId=<uuid>`.
+- `POST /products` com todos os campos, inclusive os indicadores e a situação inicial.
+- `PATCH /products/:id` para editar e limpar campos opcionais com `null`.
+- `DELETE /products/:id` para excluir um produto de teste sem pedidos vinculados.
+
+No CMS, confira cadastro ativo e inativo, indicadores ligados e desligados, imagem ausente ou inválida, filtro por categoria e sua remoção, edição de todos os campos, cancelamento da exclusão e confirmação da exclusão. Recarregue a página para verificar a persistência. Teste também preço zero/negativo, mais de duas casas decimais, nome vazio e o comportamento com a API desligada.
+
+As rotas de categorias e produtos não responderam na verificação desta etapa. A validação com banco real e no Insomnia continua pendente; não foram adicionados registros simulados à aplicação.
